@@ -107,6 +107,8 @@ And you're all set ! :+1:
 * [`multipleQueryHKitSampleType(...)`](#multiplequeryhkitsampletype)
 * [`isEditionAuthorized(...)`](#iseditionauthorized)
 * [`multipleIsEditionAuthorized(...)`](#multipleiseditionauthorized)
+* [`queryHKitStatisticsCollection(...)`](#queryhkitstatisticscollection)
+* [`queryHKitStatistics(...)`](#queryhkitstatistics)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -152,7 +154,7 @@ This defines a query to the Healthkit for a single type of data.
 isAvailable() => Promise<void>
 ```
 
-This functions resolves if HealthKitData is available it uses the native HKHealthStore.isHealthDataAvailable() funtion of the HealthKit .
+This functions resolves if HealthKitData is available it uses the native HKHealthStore.isHealthDataAvailable() function of the HealthKit.
 
 --------------------
 
@@ -163,7 +165,7 @@ This functions resolves if HealthKitData is available it uses the native HKHealt
 multipleQueryHKitSampleType(queryOptions: MultipleQueryOptions) => Promise<any>
 ```
 
-This defines a query to the Healthkit for a single type of data. This function has not been tested.
+This defines a query to the Healthkit for multiple types of data. This function has not been tested.
 
 | Param              | Type                                                                  | Description                                       |
 | ------------------ | --------------------------------------------------------------------- | ------------------------------------------------- |
@@ -182,9 +184,9 @@ isEditionAuthorized(queryOptions: EditionQuery) => Promise<void>
 
 Checks if there is writing permission for one specific sample type. This function has not been tested.
 
-| Param              | Type                                                  | Description                                                                |
-| ------------------ | ----------------------------------------------------- | -------------------------------------------------------------------------- |
-| **`queryOptions`** | <code><a href="#editionquery">EditionQuery</a></code> | defines the sampletype for which you need to check for writing permission. |
+| Param              | Type                                                  | Description                                                                 |
+| ------------------ | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| **`queryOptions`** | <code><a href="#editionquery">EditionQuery</a></code> | defines the sample type for which you need to check for writing permission. |
 
 --------------------
 
@@ -195,11 +197,45 @@ Checks if there is writing permission for one specific sample type. This functio
 multipleIsEditionAuthorized(queryOptions: MultipleEditionQuery) => Promise<void>
 ```
 
-Checks if there is writing permission for multiple sample types. This function has not been tested - and usually needs a parameter to be able to answer.
+Checks if there is writing permission for multiple sample types. This function has not been tested.
 
-| Param              | Type                                                                  | Description                                                                |
-| ------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **`queryOptions`** | <code><a href="#multipleeditionquery">MultipleEditionQuery</a></code> | defines the sampletypes for which you need to check for writing permission. |
+| Param              | Type                                                                  | Description                                                                  |
+| ------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **`queryOptions`** | <code><a href="#multipleeditionquery">MultipleEditionQuery</a></code> | defines the sample types for which you need to check for writing permission. |
+
+--------------------
+
+
+### queryHKitStatisticsCollection(...)
+
+```typescript
+queryHKitStatisticsCollection(queryOptions: StatisticsCollectionQueryOptions) => Promise<QueryOutput<AggregatedData>>
+```
+
+This defines a query to HealthKit for aggregated data over a specific time interval using HKStatisticsCollectionQuery.
+
+| Param              | Type                                                                                          | Description                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **`queryOptions`** | <code><a href="#statisticscollectionqueryoptions">StatisticsCollectionQueryOptions</a></code> | defines the type of data, timeframe, and interval for aggregation. |
+
+**Returns:** <code>Promise&lt;<a href="#queryoutput">QueryOutput</a>&lt;<a href="#aggregateddata">AggregatedData</a>&gt;&gt;</code>
+
+--------------------
+
+
+### queryHKitStatistics(...)
+
+```typescript
+queryHKitStatistics(queryOptions: StatisticsQueryOptions) => Promise<QueryOutput<AggregatedData>>
+```
+
+This defines a query to HealthKit for statistical data using HKStatisticsQuery.
+
+| Param              | Type                                                                      | Description                                                                  |
+| ------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **`queryOptions`** | <code><a href="#statisticsqueryoptions">StatisticsQueryOptions</a></code> | defines the type of data, timeframe, and statistics options for aggregation. |
+
+**Returns:** <code>Promise&lt;<a href="#queryoutput">QueryOutput</a>&lt;<a href="#aggregateddata">AggregatedData</a>&gt;&gt;</code>
 
 --------------------
 
@@ -259,9 +295,46 @@ This is used for checking writing permissions.
 
 This is used for checking writing permissions.
 
-| Prop              | Type                   |
-| ----------------- | ---------------------- |
+| Prop              | Type                  |
+| ----------------- | --------------------- |
 | **`sampleNames`** | <code>string[]</code> |
+
+
+#### AggregatedData
+
+Data structure for aggregated data, such as step counts aggregated over a period of time.
+
+| Prop            | Type                |
+| --------------- | ------------------- |
+| **`startDate`** | <code>string</code> |
+| **`endDate`**   | <code>string</code> |
+| **`value`**     | <code>number</code> |
+
+
+#### StatisticsCollectionQueryOptions
+
+These query options define the parameters for retrieving aggregated data using HKStatisticsCollectionQuery.
+
+| Prop               | Type                                     |
+| ------------------ | ---------------------------------------- |
+| **`sampleName`**   | <code>string</code>                      |
+| **`startDate`**    | <code>string</code>                      |
+| **`endDate`**      | <code>string</code>                      |
+| **`intervalUnit`** | <code>'day' \| 'hour' \| 'minute'</code> |
+| **`unit`**         | <code>string</code>                      |
+
+
+#### StatisticsQueryOptions
+
+These query options define the parameters for retrieving statistical data using HKStatisticsQuery.
+
+| Prop                    | Type                                                                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **`sampleName`**        | <code>string</code>                                                                                         |
+| **`startDate`**         | <code>string</code>                                                                                         |
+| **`endDate`**           | <code>string</code>                                                                                         |
+| **`statisticsOptions`** | <code>'cumulativeSum' \| 'discreteAverage' \| 'discreteMax' \| 'discreteMin' \| 'discreteMostRecent'</code> |
+| **`unit`**              | <code>string</code>                                                                                         |
 
 </docgen-api>
 
