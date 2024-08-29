@@ -2,33 +2,49 @@ export interface CapacitorHealthkitPlugin {
   /**
    * This functions will open the iOS Screen to let users choose their permissions. Keep in mind as developers, if the access has been denied by the user we will have no way of knowing - the query results will instead just be empty arrays.
    * @param authOptions These define which access we need. Possible Options include ['calories', 'stairs', 'activity', 'steps', 'distance', 'duration', 'weight'].
-
    */
   requestAuthorization(authOptions: AuthorizationQueryOptions): Promise<void>;
+
   /**
    * This defines a query to the Healthkit for a single type of data.
    * @param queryOptions defines the type of data and the timeframe which shall be queried, a limit can be set to reduce the number of results.
    */
-  queryHKitSampleType<T>(queryOptions:SingleQueryOptions): Promise<QueryOutput<T>>;
+  queryHKitSampleType<T>(queryOptions: SingleQueryOptions): Promise<QueryOutput<T>>;
+
   /**
-   * This functions resolves if HealthKitData is available it uses the native HKHealthStore.isHealthDataAvailable() funtion of the HealthKit .
+   * This functions resolves if HealthKitData is available it uses the native HKHealthStore.isHealthDataAvailable() function of the HealthKit.
    */
   isAvailable(): Promise<void>;
+
   /**
-   * This defines a query to the Healthkit for a single type of data. This function has not been tested.
+   * This defines a query to the Healthkit for multiple types of data. This function has not been tested.
    * @param queryOptions defines the sample types which can be queried for
    */
-  multipleQueryHKitSampleType(queryOptions:MultipleQueryOptions): Promise<any>;
+  multipleQueryHKitSampleType(queryOptions: MultipleQueryOptions): Promise<any>;
+
   /**
    * Checks if there is writing permission for one specific sample type. This function has not been tested.
-   * @param queryOptions defines the sampletype for which you need to check for writing permission.
+   * @param queryOptions defines the sample type for which you need to check for writing permission.
    */
   isEditionAuthorized(queryOptions: EditionQuery): Promise<void>;
+
   /**
    * Checks if there is writing permission for multiple sample types. This function has not been tested.
-   * @param queryOptions defines the sampletypes for which you need to check for writing permission.
+   * @param queryOptions defines the sample types for which you need to check for writing permission.
    */
   multipleIsEditionAuthorized(queryOptions: MultipleEditionQuery): Promise<void>;
+
+  /**
+   * This defines a query to HealthKit for aggregated data over a specific time interval using HKStatisticsCollectionQuery.
+   * @param queryOptions defines the type of data, timeframe, and interval for aggregation.
+   */
+  queryHKitStatisticsCollection(queryOptions: StatisticsCollectionQueryOptions): Promise<QueryOutput<AggregatedData>>;
+
+  /**
+   * This defines a query to HealthKit for statistical data using HKStatisticsQuery.
+   * @param queryOptions defines the type of data, timeframe, and statistics options for aggregation.
+   */
+  queryHKitStatistics(queryOptions: StatisticsQueryOptions): Promise<QueryOutput<AggregatedData>>;
 }
 
 /**
@@ -111,6 +127,27 @@ export interface MultipleQueryOptions extends BaseQueryOptions {
   sampleNames: string[];
 }
 
+/**
+ * These query options define the parameters for retrieving aggregated data using HKStatisticsCollectionQuery.
+ */
+export interface StatisticsCollectionQueryOptions {
+  sampleName: string;
+  startDate: string;
+  endDate: string;
+  intervalUnit: 'day' | 'hour' | 'minute';
+  unit?: string;
+}
+
+/**
+ * These query options define the parameters for retrieving statistical data using HKStatisticsQuery.
+ */
+export interface StatisticsQueryOptions {
+  sampleName: string;
+  startDate: string;
+  endDate: string;
+  statisticsOptions: 'cumulativeSum' | 'discreteAverage' | 'discreteMax' | 'discreteMin' | 'discreteMostRecent';
+  unit?: string;
+}
 
 /**
  * Used for authorization of reading and writing access.
@@ -121,7 +158,6 @@ export interface AuthorizationQueryOptions {
   all: string[];
 }
 
-
 /**
  * This is used for checking writing permissions.
  */
@@ -129,14 +165,12 @@ export interface EditionQuery {
   sampleName: string;
 }
 
-
 /**
  * This is used for checking writing permissions.
  */
 export interface MultipleEditionQuery {
   sampleNames: string[];
 }
-
 
 /**
  * These Sample names define the possible query options.
@@ -154,4 +188,13 @@ export enum SampleNames {
   WORKOUT_TYPE = 'workoutType',
   WEIGHT = 'weight',
   HEART_RATE = 'heartRate',
+}
+
+/**
+ * Data structure for aggregated data, such as step counts aggregated over a period of time.
+ */
+export interface AggregatedData {
+  startDate: string;
+  endDate: string;
+  value: number;
 }
