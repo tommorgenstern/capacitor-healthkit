@@ -509,6 +509,110 @@ public class CapacitorHealthkitPlugin: CAPPlugin {
         }
         healthStore.execute(query)
     }
+
+    @objc func queryHKitStatistics(_ call: CAPPluginCall) {
+        guard let sampleName = call.options["sampleName"] as? String else {
+            return call.reject("Must provide sampleName")
+        }
+        guard let startDateString = call.options["startDate"] as? String else {
+            return call.reject("Must provide startDate")
+        }
+        guard let endDateString = call.options["endDate"] as? String else {
+            return call.reject("Must provide endDate")
+        }
+        let unitString = call.options["unit"] as? String
+
+        let startDate = getDateFromString(inputDate: startDateString)
+        let endDate = getDateFromString(inputDate: endDateString)
+        
+        guard let quantityType = getSampleType(sampleName: sampleName) as? HKQuantityType else {
+            return call.reject("Invalid sample name")
+        }
+
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+
+        let query = HKStatisticsQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, statistics, error in
+            if let error = error {
+                call.reject("Error fetching statistics: \(error.localizedDescription)")
+                return
+            }
+            guard let sum = statistics?.sumQuantity() else {
+                call.reject("No data available")
+                return
+            }
+            let value = sum.doubleValue(for: HKUnit(from: unitString ?? "count"))
+            call.resolve([
+                "value": value,
+                "startDate": ISO8601DateFormatter().string(from: startDate),
+                "endDate": ISO8601DateFormatter().string(from: endDate)
+            ])
+        }
+        healthStore.execute(query)
+    }
+
+    @objc func queryHKitStatisticsCollection(_ call: CAPPluginCall) {
+        guard let sampleName = call.options["sampleName"] as? String else {
+            return call.reject("Must provide sampleName")
+        }
+        guard let startDateString = call.options["startDate"] as? String else {
+            return call.reject("Must provide startDate")
+        }
+        guard let endDateString = call.options["endDate"] as? String else {
+            return call.reject("Must provide endDate")
+        }
+        guard let intervalUnit = call.options["intervalUnit"] as? String else {
+            return call.reject("Must provide intervalUnit")
+        }
+        let unitString = call.options["unit"] as? String
+
+        let startDate = getDateFromString(inputDate: startDateString)
+        let endDate = getDateFromString(inputDate: endDateString)
+        
+        guard let quantityType = getSampleType(sampleName: sampleName) as? HKQuantityType else {
+            return call.reject("Invalid sample name")
+        }
+
+        var interval = DateComponents()
+        switch intervalUnit {
+        case "day":
+            interval.day = 1
+        case "hour":
+            interval.hour = 1
+        case "minute":
+            interval.minute = 1
+        default:
+            return call.reject("Invalid interval unit")
+        }
+
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let anchorDate = Calendar.current.startOfDay(for: startDate)
+
+        let query = HKStatisticsCollectionQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: [.cumulativeSum], anchorDate: anchorDate, intervalComponents: interval)
+        
+        query.initialResultsHandler = { query, results, error in
+            if let error = error {
+                call.reject("Error fetching statistics: \(error.localizedDescription)")
+                return
+            }
+
+            var statisticsData: [[String: Any]] = []
+            results?.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                if let sum = statistics.sumQuantity() {
+                    let value = sum.doubleValue(for: HKUnit(from: unitString ?? "count"))
+                    statisticsData.append([
+                        "startDate": ISO8601DateFormatter().string(from: statistics.startDate),
+                        "endDate": ISO8601DateFormatter().string(from: statistics.endDate),
+                        "value": value
+                    ])
+                }
+            }
+            call.resolve([
+                "countReturn": statisticsData.count,
+                "resultData": statisticsData
+            ])
+        }
+        healthStore.execute(query)
+    }
     
     @objc func isAvailable(_ call: CAPPluginCall) {
         if HKHealthStore.isHealthDataAvailable() {
